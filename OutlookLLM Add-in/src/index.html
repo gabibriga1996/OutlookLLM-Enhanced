@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>OutlookLLM Add-in</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0078d4;
+            margin-bottom: 20px;
+        }
+        .links {
+            margin-top: 30px;
+        }
+        .link {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #0078d4;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .link:hover {
+            background-color: #106ebe;
+        }
+        .info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0f9ff;
+            border-left: 4px solid #0078d4;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 OutlookLLM Add-in</h1>
+        <p>Welcome to the OutlookLLM development server!</p>
+        
+        <div class="info">
+            <strong>Status:</strong><br>
+            ✅ Frontend Server: Running on https://localhost:3000<br>
+            ✅ Backend Server: Should be running on http://127.0.0.1:8385<br>
+            ✅ SSL Certificates: Configured for Office Add-in development
+        </div>
+        
+        <div class="links">
+            <a href="/taskpane.html" class="link">📧 Main Taskpane</a>
+            <a href="/commands.html" class="link">⚙️ Commands</a>
+            <a href="http://127.0.0.1:8385/health" class="link" target="_blank">🔍 Backend Health</a>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 14px; color: #666;">
+            <p><strong>For Outlook Integration:</strong></p>
+            <p>This add-in should be loaded automatically in Outlook.<br>
+            Look for "OutlookLLM" in your Outlook add-ins panel.</p>
+        </div>
+    </div>
+</body>
+</html>
