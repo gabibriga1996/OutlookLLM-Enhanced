@@ -1,0 +1,11 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\WEF\Developer\eb774e01-2b8b-4518-8a0b-0475615abdd0\OutlookAddinManifest]
+"FileName"="C:\\develop\\llm\\OutlookLLM\\OutlookLLM Add-in\\manifest-com.xml"
+"UseDirectLoading"=dword:00000001
+
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\Outlook\Addins\OutlookLLM]
+"FriendlyName"="OutlookLLM COM Add-in"
+"Description"="COM Add-in for Outlook with AI features"
+"LoadBehavior"=dword:00000003
+"CommandLineSafe"=dword:00000001

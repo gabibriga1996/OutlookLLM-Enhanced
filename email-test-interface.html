@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>בדיקת תמצית ומענה למייל</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; direction: rtl; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .button { padding: 10px 20px; margin: 10px 5px; background: #0078d4; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .button:hover { background: #106ebe; }
+        .result { margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; white-space: pre-wrap; }
+        .loading { color: #666; font-style: italic; }
+        .error { color: #d13438; font-weight: bold; }
+        .success { color: #107c10; }
+        textarea { width: 100%; height: 100px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>בדיקת תמצית ומענה למייל</h1>
+        
+        <div class="section">
+            <h2>מייל לדוגמה</h2>
+            <p><strong>נושא:</strong> <span id="email-subject">בקשה לפגישה דחופה - פרויקט חדש</span></p>
+            <p><strong>מאת:</strong> <span id="email-sender">manager@company.com</span></p>
+            <p><strong>תוכן:</strong></p>
+            <div id="email-body">
+                שלום,<br><br>
+                אני צריך לקבוע פגישה דחופה להשבוע הקרוב כדי לדבר על הפרויקט החדש שהתקבל. 
+                הלקוח מבקש תשובה עד יום רביעי.<br><br>
+                אנא בדוק את הזמינות שלך ותודיע לי מתי אתה פנוי.<br><br>
+                תודה,<br>
+                המנהל
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>תמצית המייל</h2>
+            <button class="button" onclick="summarizeEmail()">צור תמצית</button>
+            <div id="summary-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>מענה מוצע</h2>
+            <button class="button" onclick="suggestResponse()">הצע מענה</button>
+            <div id="response-result" class="result" style="display: none;"></div>
+            
+            <h3>עריכת מענה</h3>
+            <textarea id="response-edit" placeholder="המענה המוצע יופיע כאן לעריכה..."></textarea>
+            <button class="button" onclick="sendResponse()">שלח מענה</button>
+            <div id="send-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>בדיקת חיבור לשרת</h2>
+            <button class="button" onclick="testConnection()">בדוק חיבור</button>
+            <div id="connection-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const testEmail = {
+            subject: "בקשה לפגישה דחופה - פרויקט חדש",
+            sender: "manager@company.com",
+            body: "שלום,\n\nאני צריך לקבוע פגישה דחופה להשבוע הקרוב כדי לדבר על הפרויקט החדש שהתקבל. הלקוח מבקש תשובה עד יום רביעי.\n\nאנא בדוק את הזמינות שלך ותודיע לי מתי אתה פנוי.\n\nתודה,\nהמנהל",
+            dateReceived: "2024-09-14T10:30:00Z"
+        };
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<span class="loading">בודק חיבור...</span>';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8385/health');
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="success">חיבור תקין!</span><br>סטטוס: ${data.status}<br>מודל: ${data.model}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">שגיאה בחיבור: ${error.message}</span>`;
+            }
+        }
+
+        async function summarizeEmail() {
+            const resultDiv = document.getElementById('summary-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<span class="loading">מכין תמצית...</span>';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8385/summarizeEmail', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: testEmail })
+                });
+                
+                const data = await response.json();
+                if (data.error) {
+                    resultDiv.innerHTML = `<span class="error">שגיאה: ${data.error}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="success">תמצית:</span><br>${data.summary}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">שגיאה: ${error.message}</span>`;
+            }
+        }
+
+        async function suggestResponse() {
+            const resultDiv = document.getElementById('response-result');
+            const editTextarea = document.getElementById('response-edit');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<span class="loading">מכין מענה מוצע...</span>';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8385/suggestResponse', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: testEmail })
+                });
+                
+                const data = await response.json();
+                if (data.error) {
+                    resultDiv.innerHTML = `<span class="error">שגיאה: ${data.error}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="success">מענה מוצע:</span><br>${data.response}`;
+                    editTextarea.value = data.response;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">שגיאה: ${error.message}</span>`;
+            }
+        }
+
+        async function sendResponse() {
+            const editTextarea = document.getElementById('response-edit');
+            const resultDiv = document.getElementById('send-result');
+            
+            if (!editTextarea.value.trim()) {
+                alert('אנא הכן מענה לפני השליחה');
+                return;
+            }
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<span class="loading">שולח מענה...</span>';
+            
+            // סימולציה של שליחת מענה - בהרצאה אמיתית זה יתחבר ל-Outlook API
+            setTimeout(() => {
+                resultDiv.innerHTML = '<span class="success">המענה נשלח בהצלחה!</span>';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OutlookLLM Enhanced - Test Page</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0078d4;
+            margin-bottom: 20px;
+        }
+        .button {
+            background-color: #0078d4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #106ebe;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f0f8ff;
+            border: 1px solid #0078d4;
+        }
+        .response {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 OutlookLLM Enhanced - Test Interface</h1>
+        
+        <div class="status" id="status">
+            מצב: טוען...
+        </div>
+
+        <h2>✏️ בדיקת יצירת אימייל</h2>
+        <textarea id="emailPrompt" placeholder="הכנס כאן את ההנחיה ליצירת אימייל...">כתוב לי אימייל מקצועי לבקשת פגישה</textarea>
+        <button class="button" onclick="testComposeEmail()">צור אימייל</button>
+
+        <h2>📄 בדיקת סיכום אימייל</h2>
+        <textarea id="emailContent" placeholder="הכנס כאן תוכן אימייל לסיכום...">שלום, אני רוצה לקבוע פגישה לדון על הפרויקט החדש שלנו. האם אתה זמין מחר בשעה 14:00? תודה רבה.</textarea>
+        <button class="button" onclick="testSummarizeEmail()">סכם אימייל</button>
+
+        <h2>📧 בדיקת סיכום מיילים שלא נקראו</h2>
+        <p>בדיקה עם מיילים מדומים (הפונקציה האמיתית תעבוד רק בתוך Outlook)</p>
+        <button class="button" onclick="testSummarizeUnreadEmails()">סכם מיילים שלא נקראו</button>
+
+        <div class="response" id="response">
+            התגובות יופיעו כאן...
+        </div>
+
+        <h2>🔧 בדיקת חיבור לשרת</h2>
+        <button class="button" onclick="testConnection()">בדוק חיבור</button>
+    </div>
+
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = message;
+        }
+
+        function showResponse(data) {
+            document.getElementById('response').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        async function testConnection() {
+            try {
+                updateStatus('בודק חיבור לשרת...');
+                const response = await fetch('http://127.0.0.1:8385/health');
+                const data = await response.json();
+                updateStatus('✅ החיבור לשרת תקין!');
+                showResponse(data);
+            } catch (error) {
+                updateStatus('❌ שגיאה בחיבור לשרת: ' + error.message);
+                showResponse({error: error.message});
+            }
+        }
+
+        async function testComposeEmail() {
+            try {
+                updateStatus('יוצר אימייל...');
+                const prompt = document.getElementById('emailPrompt').value;
+                const response = await fetch('http://127.0.0.1:8385/composeEmail', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({prompt: prompt})
+                });
+                const data = await response.json();
+                updateStatus('✅ אימייל נוצר בהצלחה!');
+                showResponse(data);
+            } catch (error) {
+                updateStatus('❌ שגיאה ביצירת אימייל: ' + error.message);
+                showResponse({error: error.message});
+            }
+        }
+
+        async function testSummarizeEmail() {
+            try {
+                updateStatus('מסכם אימייל...');
+                const content = document.getElementById('emailContent').value;
+                const response = await fetch('http://127.0.0.1:8385/summarizeEmail', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({content: content})
+                });
+                const data = await response.json();
+                updateStatus('✅ אימייל סוכם בהצלחה!');
+                showResponse(data);
+            } catch (error) {
+                updateStatus('❌ שגיאה בסיכום אימייל: ' + error.message);
+                showResponse({error: error.message});
+            }
+        }
+
+        async function testSummarizeUnreadEmails() {
+            try {
+                updateStatus('מסכם מיילים שלא נקראו...');
+                
+                // Mock unread emails for testing
+                const mockEmails = [
+                    {
+                        subject: "פגישה דחופה",
+                        sender: "מנהל הפרויקט",
+                        body: "שלום, אני צריך לקבוע פגישה דחופה לדון על השינויים בפרויקט. אפשר מחר בבוקר?",
+                        dateReceived: "2025-09-14T10:30:00Z"
+                    },
+                    {
+                        subject: "עדכון מערכת",
+                        sender: "מחלקת IT",
+                        body: "העדכון החדש של המערכת יתבצע הערב בשעה 22:00. נא להכין גיבוי לכל הקבצים.",
+                        dateReceived: "2025-09-14T09:15:00Z"
+                    },
+                    {
+                        subject: "הזמנה לאירוע",
+                        sender: "משאבי אנוש",
+                        body: "אתם מוזמנים לאירוע החברה השנתי ביום שישי. נא לאשר הגעה עד יום רביעי.",
+                        dateReceived: "2025-09-14T08:00:00Z"
+                    }
+                ];
+
+                const response = await fetch('http://127.0.0.1:8385/summarizeUnreadEmails', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({emails: mockEmails})
+                });
+                const data = await response.json();
+                updateStatus('✅ מיילים שלא נקראו סוכמו בהצלחה!');
+                showResponse(data);
+            } catch (error) {
+                updateStatus('❌ שגיאה בסיכום מיילים שלא נקראו: ' + error.message);
+                showResponse({error: error.message});
+            }
+        }
+        window.onload = function() {
+            updateStatus('🚀 OutlookLLM Enhanced מוכן לשימוש!');
+            testConnection();
+        };
+    </script>
+</body>
+</html>

@@ -5,7 +5,7 @@ import { FluentProvider, webLightTheme } from "@fluentui/react-components";
 
 /* global document, Office, module, require */
 
-const title = "Compose with AI";
+const title = "יצירה עם בינה מלאכותית";
 
 const rootElement = document.getElementById("container");
 const root = createRoot(rootElement);

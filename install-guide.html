@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>התקנת OutlookLLM</title>
+    <style>
+        body { 
+            font-family: Segoe UI, Arial, sans-serif; 
+            margin: 40px; 
+            background: #f5f5f5; 
+            direction: rtl; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step { 
+            margin: 25px 0; 
+            padding: 20px; 
+            background: #f0f8ff; 
+            border-right: 4px solid #0078d4; 
+            border-radius: 5px;
+        }
+        .step h3 { color: #0078d4; margin-top: 0; }
+        .button { 
+            display: inline-block;
+            padding: 12px 24px; 
+            background: #0078d4; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            margin: 5px; 
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover { background: #106ebe; }
+        .manifest-url { 
+            background: #f8f8f8; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            font-size: 14px;
+            direction: ltr;
+            text-align: left;
+        }
+        .success { color: #107c10; font-weight: bold; }
+        .warning { color: #d13438; font-weight: bold; }
+        .status { 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+        }
+        .status.ok { background: #d4edd6; border: 1px solid #107c10; }
+        .status.error { background: #fde7e9; border: 1px solid #d13438; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 התקנת OutlookLLM לתיבת המיילים</h1>
+        
+        <div id="status-check">
+            <h2>בדיקת מערכת</h2>
+            <button class="button" onclick="checkStatus()">בדוק מצב השרתים</button>
+            <div id="status-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>שלב 1: פתח את Outlook Web</h3>
+            <p>לחץ על הכפתור למטה כדי לפתוח את Outlook Web:</p>
+            <a href="https://outlook.live.com" target="_blank" class="button">פתח Outlook Web</a>
+        </div>
+
+        <div class="step">
+            <h3>שלב 2: נווט להתקנת תוספות</h3>
+            <p>ב-Outlook Web:</p>
+            <ol>
+                <li>התחבר לחשבון שלך</li>
+                <li>לחץ על ⚙️ (Settings) בפינה הימנית העליונה</li>
+                <li>בחר "View all Outlook settings"</li>
+                <li>לחץ על "General" ואז "Add-ins"</li>
+                <li>או לחץ כאן: <a href="https://outlook.live.com/mail/0/options/general/addins" target="_blank" class="button">קישור ישיר לתוספות</a></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>שלב 3: התקן את התוסף</h3>
+            <p>בדף התוספות:</p>
+            <ol>
+                <li>לחץ על "My add-ins"</li>
+                <li>לחץ על "+ Add a custom add-in"</li>
+                <li>בחר "Add from URL"</li>
+                <li>העתק והדבק את הכתובת הבאה:</li>
+            </ol>
+            <div class="manifest-url" id="manifest-url">https://localhost:3001/manifest.xml</div>
+            <button class="button" onclick="copyManifest()">העתק כתובת</button>
+            <button class="button" onclick="testManifest()">בדוק נגישות</button>
+        </div>
+
+        <div class="step">
+            <h3>שלב 4: השתמש בתוסף</h3>
+            <p>לאחר ההתקנה המוצלחת:</p>
+            <ol>
+                <li>פתח מייל חדש או בחר מייל קיים</li>
+                <li>חפש את "OutlookLLM" בסרגל הכלים</li>
+                <li>השתמש בתכונות הAI לסיכום ומענה למיילים</li>
+            </ol>
+            <a href="https://localhost:3001/taskpane.html" target="_blank" class="button">בדוק ממשק</a>
+        </div>
+
+        <div class="step">
+            <h3>🛠️ פתרון בעיות</h3>
+            <button class="button" onclick="openTroubleshooting()">מדריך פתרון בעיות</button>
+            <button class="button" onclick="openTestInterface()">ממשק בדיקות</button>
+        </div>
+    </div>
+
+    <script>
+        async function checkStatus() {
+            const resultDiv = document.getElementById('status-result');
+            resultDiv.innerHTML = '<p>בודק...</p>';
+            
+            let backendStatus = '❌ לא רץ';
+            let frontendStatus = '❌ לא רץ';
+            let manifestStatus = '❌ לא נגיש';
+            
+            try {
+                const backendResponse = await fetch('http://127.0.0.1:8385/health');
+                if (backendResponse.ok) {
+                    backendStatus = '✅ רץ תקין';
+                }
+            } catch (e) {
+                console.log('Backend not running');
+            }
+            
+            try {
+                const frontendResponse = await fetch('https://localhost:3001/');
+                if (frontendResponse.ok) {
+                    frontendStatus = '✅ רץ תקין';
+                }
+            } catch (e) {
+                console.log('Frontend not running');
+            }
+            
+            try {
+                const manifestResponse = await fetch('https://localhost:3001/manifest.xml');
+                if (manifestResponse.ok) {
+                    manifestStatus = '✅ נגיש';
+                }
+            } catch (e) {
+                console.log('Manifest not accessible');
+            }
+            
+            const allOk = backendStatus.includes('✅') && frontendStatus.includes('✅') && manifestStatus.includes('✅');
+            
+            resultDiv.innerHTML = `
+                <div class="status ${allOk ? 'ok' : 'error'}">
+                    <strong>מצב השרתים:</strong><br>
+                    🖥️ שרת קלפי (Backend): ${backendStatus}<br>
+                    🌐 שרת ממשק (Frontend): ${frontendStatus}<br>
+                    📄 קובץ Manifest: ${manifestStatus}<br>
+                    ${allOk ? '<br><span class="success">✅ המערכת מוכנה להתקנה!</span>' : '<br><span class="warning">⚠️ נא להפעיל את השרתים תחילה</span>'}
+                </div>
+            `;
+        }
+        
+        function copyManifest() {
+            const manifestUrl = document.getElementById('manifest-url').textContent;
+            navigator.clipboard.writeText(manifestUrl).then(function() {
+                alert('הכתובת הועתקה ללוח!');
+            });
+        }
+        
+        function testManifest() {
+            window.open('https://localhost:3001/manifest.xml', '_blank');
+        }
+        
+        function openTroubleshooting() {
+            window.open('OUTLOOK_CONNECTION_GUIDE.md', '_blank');
+        }
+        
+        function openTestInterface() {
+            window.open('email-test-interface.html', '_blank');
+        }
+        
+        // בדיקה אוטומטית בטעינת הדף
+        window.onload = function() {
+            setTimeout(checkStatus, 1000);
+        };
+    </script>
+</body>
+</html>
