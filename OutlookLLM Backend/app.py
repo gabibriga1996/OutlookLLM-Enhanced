@@ -4,6 +4,8 @@ from flask import Flask, Response, request, jsonify
 from flask_cors import CORS
 from trt_llama_api import TrtLlmAPI
 from utils import messages_to_prompt, completion_to_prompt
+from outlook_rag import OutlookRAGSystem
+from sample_data_generator import generate_sample_emails, generate_sample_calendar_events
 import json
 import logging
 import os
@@ -87,6 +89,24 @@ CORS(app) # to enable CORS from the Add-in
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
+# Initialize RAG system
+rag_system = OutlookRAGSystem()
+
+# Load sample data if no real data is available
+if rag_system.get_stats()["total_emails"] == 0:
+    logging.info("Loading sample data for RAG system...")
+    sample_emails = generate_sample_emails()
+    sample_events = generate_sample_calendar_events()
+    
+    for email in sample_emails:
+        rag_system.add_email(email)
+    
+    for event in sample_events:
+        rag_system.add_calendar_event(event)
+    
+    rag_system.save_embeddings_cache()
+    logging.info(f"Loaded {len(sample_emails)} emails and {len(sample_events)} events")
+
 # create trt_llm engine object
 llm = TrtLlmAPI(
     model_path=trt_engine_path,
@@ -106,7 +126,116 @@ def completions(prompt, temperature= 1.0, stop_strings = [], system_prompt=None)
     return llm.complete_common(prompt_final, False, temperature=temperature, formatted=True, stop_strings=stop_strings)
     
 
-@app.route('/composeEmail', methods=['POST'])
+@app.route('/health', methods=['GET'])
+def health():
+    rag_stats = rag_system.get_stats()
+    return jsonify({
+        "status": "healthy", 
+        "message": "OutlookLLM backend is running",
+        "rag_system": rag_stats
+    })
+
+@app.route('/query/inbox', methods=['POST'])
+def query_inbox():
+    """Query inbox using RAG"""
+    assert request.headers.get('Content-Type') == 'application/json'
+    body = request.get_json()
+    
+    question = body.get("question", "")
+    if not question:
+        return jsonify({"error": "Question is required"}), 400
+    
+    try:
+        rag_result = rag_system.query_inbox(question)
+        
+        # Generate response using the context
+        context = rag_result["context"]
+        prompt = f"Based on the following email context, answer the user's question.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+        
+        # Mock response for now (replace with actual LLM when available)
+        mock_answer = f"Based on your inbox, I found {len(rag_result['relevant_emails'])} relevant emails. "
+        if rag_result['relevant_emails']:
+            email = rag_result['relevant_emails'][0]
+            mock_answer += f"The most relevant email is from {email['sender']} with subject '{email['subject']}' dated {email['date'][:10]}."
+        
+        response = {
+            "question": question,
+            "answer": mock_answer,
+            "relevant_emails": rag_result["relevant_emails"],
+            "context_used": True
+        }
+        
+        app.logger.info(f'Inbox query: {question}')
+        return jsonify(response)
+        
+    except Exception as e:
+        app.logger.error(f'Error in inbox query: {str(e)}')
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/query/calendar', methods=['POST'])
+def query_calendar():
+    """Query calendar using RAG"""
+    assert request.headers.get('Content-Type') == 'application/json'
+    body = request.get_json()
+    
+    question = body.get("question", "")
+    if not question:
+        return jsonify({"error": "Question is required"}), 400
+    
+    try:
+        rag_result = rag_system.query_calendar(question)
+        
+        # Generate response using the context
+        context = rag_result["context"]
+        prompt = f"Based on the following calendar context, answer the user's question.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+        
+        # Mock response for now (replace with actual LLM when available)
+        mock_answer = f"Based on your calendar, I found {len(rag_result['relevant_events'])} relevant events. "
+        if rag_result['relevant_events']:
+            event = rag_result['relevant_events'][0]
+            mock_answer += f"The most relevant event is '{event['subject']}' organized by {event['organizer']} starting at {event['start_time'][:16]}."
+        
+        response = {
+            "question": question,
+            "answer": mock_answer,
+            "relevant_events": rag_result["relevant_events"],
+            "context_used": True
+        }
+        
+        app.logger.info(f'Calendar query: {question}')
+        return jsonify(response)
+        
+    except Exception as e:
+        app.logger.error(f'Error in calendar query: {str(e)}')
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/add/email', methods=['POST'])
+def add_email():
+    """Add new email to RAG system"""
+    assert request.headers.get('Content-Type') == 'application/json'
+    body = request.get_json()
+    
+    try:
+        email_id = rag_system.add_email(body)
+        rag_system.save_embeddings_cache()
+        return jsonify({"message": "Email added successfully", "id": email_id})
+    except Exception as e:
+        app.logger.error(f'Error adding email: {str(e)}')
+        return jsonify({"error": "Failed to add email"}), 500
+
+@app.route('/add/event', methods=['POST'])
+def add_event():
+    """Add new calendar event to RAG system"""
+    assert request.headers.get('Content-Type') == 'application/json'
+    body = request.get_json()
+    
+    try:
+        event_id = rag_system.add_calendar_event(body)
+        rag_system.save_embeddings_cache()
+        return jsonify({"message": "Event added successfully", "id": event_id})
+    except Exception as e:
+        app.logger.error(f'Error adding event: {str(e)}')
+        return jsonify({"error": "Failed to add event"}), 500
 def composeEmail():
     assert request.headers.get('Content-Type') == 'application/json'
     body = request.get_json()

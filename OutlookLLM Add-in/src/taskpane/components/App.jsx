@@ -5,7 +5,9 @@ import Header from "./Header";
 import HeroList from "./HeroList";
 import TextInsertion from "./TextInsertion";
 import UnreadEmailsList from "./UnreadEmailsList";
-import { makeStyles, Tab, TabList, TabValue } from "@fluentui/react-components";
+import RAGQuery from "./RAGQuery";
+import OutlookRAGQuery from "./OutlookRAGQuery";
+import { makeStyles, Tab, TabList, TabValue, Divider, Button } from "@fluentui/react-components";
 import { Ribbon24Regular, LockOpen24Regular, DesignIdeas24Regular, Mail24Regular } from "@fluentui/react-icons";
 
 const useStyles = makeStyles({
@@ -28,6 +30,24 @@ const App = (props) => {
     setSelectedTab(data.value);
   };
 
+  const listItems = [
+    {
+      icon: "📧",
+      primaryText: "Compose with AI",
+      secondaryText: "Generate professional emails using AI assistance",
+    },
+    {
+      icon: "🔍", 
+      primaryText: "Inbox & Calendar Q&A",
+      secondaryText: "Ask questions about your emails and meetings",
+    },
+    {
+      icon: "📊",
+      primaryText: "Smart Summaries", 
+      secondaryText: "Get insights from your communication data",
+    },
+  ];
+
   return (
     <div className={styles.root}>
       <div className={styles.tabContainer}>
@@ -38,11 +58,15 @@ const App = (props) => {
           <Tab id="Unread" value="unread" icon={<Mail24Regular />}>
             מיילים שלא נקראו
           </Tab>
+          <Tab id="RAG" value="rag" icon={<LockOpen24Regular />}>
+            שאלות ותשובות
+          </Tab>
         </TabList>
         
         <div className={styles.tabContent}>
           {selectedTab === "compose" && <TextInsertion />}
           {selectedTab === "unread" && <UnreadEmailsList />}
+          {selectedTab === "rag" && <OutlookRAGQuery />}
         </div>
       </div>
     </div>

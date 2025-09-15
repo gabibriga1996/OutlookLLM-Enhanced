@@ -28,10 +28,35 @@ const TextInsertion = () => {
   const [writeSubject, setWriteSubject] = useState(false);
   const [emailTone, setEmailTone] = useState("professional");
 
+<<<<<<< HEAD
   const generateSmartEmail = (prompt) => {
     const originalText = prompt.trim();
     let subject = "";
     let body = "";
+=======
+
+  const handleTextInsertion = async () => {
+    try {
+      
+      setshowSpinner(true);
+      
+      const response = await fetch("http://127.0.0.1:8385/composeEmail", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: text,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      // Handle success response if needed
+      console.log('Data sent successfully');
+>>>>>>> 2f3eee1c06c68a63ac81699c6e5969d582bfd1d3
     
     if (originalText.includes("גלידה")) {
       subject = "הזמנה לגלידה! 🍦";
